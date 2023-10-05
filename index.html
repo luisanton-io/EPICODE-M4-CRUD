@@ -7,38 +7,44 @@
     <title>Bootstrap demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 
 <body>
 
-    <div class="container mt-5">
+    <div class="container my-5 pb-5">
         <h1>EPICODE Agenda</h1>
-        <div id="main-row" class="row">
+        <div id="main-row" class="container row">
 
         </div>
         <hr>
         <h3>Add Event</h3>
-        <form class="row" onsubmit="addToAgenda(event)">
-            <div class="col-3">
-                <label>Name</label>
-                <input required id="name" type="text" class="form-control" placeholder="John Doe Live">
-            </div>
-            <div class="col-3">
-                <label>Description</label>
-                <input required id="description" type="text" class="form-control" placeholder="First time in Europe">
-            </div>
-            <div class="col-3">
-                <label>Price</label>
-                <div class="d-flex align-items-center">
-                    <span class="me-2">EUR</span>
-                    <input required id="price" type="text" class="form-control" placeholder="50">
+        <form class="container row" onsubmit="addToAgenda(event)">
+            <div class="row g-2">
+                <div class="col-3">
+                    <label>Name</label>
+                    <input required id="name" type="text" class="form-control" placeholder="John Doe Live">
                 </div>
-            </div>
-            <div class="col-3">
-                <label>Date and Time</label>
+                <div class="col-3">
+                    <label>Description</label>
+                    <input required id="description" type="text" class="form-control"
+                        placeholder="First time in Europe">
+                </div>
+                <div class="col-2">
+                    <label>Price</label>
+                    <div class="d-flex align-items-center">
+                        <span class="me-2">EUR</span>
+                        <input required id="price" type="text" class="form-control" placeholder="50">
+                    </div>
+                </div>
+                <div class="col-3">
+                    <label>Date and Time</label>
 
-                <div class="d-flex align-items-center">
-                    <input required id="time" type="datetime-local" class="form-control">
+                    <div class="d-flex align-items-center">
+                        <input required id="time" type="datetime-local" class="form-control">
+                    </div>
+                </div>
+                <div class="col-1 d-flex align-items-end">
                     <button class="ms-2 btn btn-primary">Add</button>
                 </div>
             </div>
@@ -97,20 +103,147 @@
         }
 
         function displayAgenda(data) {
-            row.innerHTML = data.map(({ name, description, price, time }) => /*html*/`
-                <div class="col-3">
-                    ${name} 
-                </div>    
-                <div class="col-3">
-                    ${description} 
-                </div>    
-                <div class="col-3">
-                    EUR ${price}
-                </div>    
-                <div class="col-3">
-                    ${new Date(time).toLocaleDateString()} ${new Date(time).toLocaleTimeString()}
-                </div>    
+            row.innerHTML = data.map(({ _id, name, description, price, time }) => /*html*/`
+                <div id="_${_id}" class="row g-2 col-12" style="min-height: 60px">
+                    <div class="col-3">
+                        ${name} 
+                    </div>    
+                    <div class="col-3">
+                        ${description} 
+                    </div>    
+                    <div class="col-2">
+                        EUR ${price}
+                    </div>    
+                    <div class="col-3">
+                        ${new Date(time).toLocaleDateString()} ${new Date(time).toLocaleTimeString()}
+                    </div>    
+                    <div class="col-1 d-flex align-items-center justify-content-between">
+                        <button class="btn btn-warning px-2" onclick="handleEdit('${_id}')">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-danger px-2" onclick="handleDelete('${_id}')"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
             `).join("")
+        }
+
+        async function handleEdit(id) {
+            const agendaEvent = await fetch("https://striveschool-api.herokuapp.com/api/agenda/" + id)
+            const agendaEventJson = await agendaEvent.json()
+
+            const { name, description, price, time } = agendaEventJson
+
+            const agendaEventRow = document.querySelector(`#_${id}`)
+
+            agendaEventRow.innerHTML = /*html*/`
+                <form class="container row" onsubmit="handleEditSubmit(event, '${id}')">
+                    <div class="row g-2">
+                        <div class="col-3">
+                            <label>Name</label>
+                            <input required name="name" type="text" class="form-control" value="${name}">
+                        </div>
+                        <div class="col-3">
+                            <label>Description</label>
+                            <input required name="description" type="text" class="form-control"
+                                placeholder="First time in Europe" value="${description}">
+                        </div>
+                        <div class="col-2">
+                            <label>Price</label>
+                            <div class="d-flex align-items-center">
+                                <span class="me-2">EUR</span>
+                                <input required name="price" type="text" class="form-control" placeholder="50" value="${price}">
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <label>Date and Time</label>
+
+                            <div class="d-flex align-items-center">
+                                <input required name="time" type="datetime-local" class="form-control" value="${time.slice(0, 16)}">
+                            </div>
+                        </div>
+                        <div class="col-1 d-flex align-items-center">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-square-fill"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="handleEditCancel()">
+                                <i class="bi bi-x-square-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            `
+
+        }
+
+        async function handleEditSubmit(e, id) {
+            e.preventDefault();
+
+            e.target.classList.add("pe-none")
+
+            e.target.querySelector("button[type=submit]").innerHTML = /*html*/`
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `
+
+
+            // console.log("ok")
+            const name = document.querySelector(`#_${id} [name='name']`);
+            const description = document.querySelector(`#_${id} [name='description']`);
+            const price = document.querySelector(`#_${id} [name='price']`);
+            const time = document.querySelector(`#_${id} [name='time']`);
+
+            const updatedEvent = {
+                name: name.value,
+                description: description.value,
+                price: price.value,
+                time: time.value
+            }
+
+            try {
+
+                const response = await fetch("https://striveschool-api.herokuapp.com/api/agenda/" + id, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(updatedEvent)
+                })
+
+                if (response.ok) {
+                    displayAgenda(await getAgenda())
+                } else {
+                    alert("Something went wrong, cannot update. Check network tab.")
+                }
+
+            } catch {
+                alert("You are offline.")
+            }
+
+        }
+
+        async function handleEditCancel() {
+            displayAgenda(await getAgenda())
+        }
+
+        async function handleDelete(id) {
+
+            if (!confirm("Are you sure you want to delete this event?")) {
+                return
+            }
+
+            const response = await fetch("https://striveschool-api.herokuapp.com/api/agenda/" + id, {
+                method: "DELETE"
+            })
+
+            if (response.ok) {
+                alert("Event " + id + " deleted!")
+                displayAgenda(await getAgenda())
+            } else {
+                alert("Can't delete this event. Try again later")
+            }
         }
 
         window.onload = async function () {
